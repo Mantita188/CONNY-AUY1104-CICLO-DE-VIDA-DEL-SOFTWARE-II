@@ -14,7 +14,7 @@ on:
       eks_cluster_name:
         description: 'Nombre del Cluster EKS (duoc-eks-cluster-cli)'
         required: true
-        default: 'cluster-inexistente'
+        default: 'duoc-eks-cluster-cli'
       aws_region:
         description: 'Región de AWS'
         required: true
