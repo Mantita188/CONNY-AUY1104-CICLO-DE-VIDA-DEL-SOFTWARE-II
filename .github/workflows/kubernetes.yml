@@ -72,3 +72,4 @@ jobs:
           sleep 60
           kubectl scale deployment/duoc-app-canary-v2 --replicas=3
           kubectl scale deployment/duoc-app-stable-v1 --replicas=0
+          #prueba
