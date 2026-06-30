@@ -7,9 +7,8 @@ on:
   workflow_dispatch:
     inputs:
       strategy:
-        description: 'Estrategia a Ejecutar (rolling-update, recreate, blue-green, o canary)'
+        description: 'Estrategia (rolling-update, recreate, blue-green, canary)'
         required: true
-        type: string
         default: 'rolling-update'
       eks_cluster_name:
         description: 'Nombre del Cluster EKS'
@@ -23,9 +22,6 @@ on:
 jobs:
   deploy-strategy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read 
-    
     steps:
       - name: Checkout Código
         uses: actions/checkout@v4
@@ -38,38 +34,31 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ github.event.inputs.aws_region }}
 
-      - name: Configurar Kubectl para EKS
+      - name: Conectar a EKS
         run: |
           aws eks update-kubeconfig --name ${{ github.event.inputs.eks_cluster_name }} --region ${{ github.event.inputs.aws_region }}
       
-      - name: 🔄 Ejecutar Rolling Update
+      - name: 🔄 Rolling Update
         if: ${{ github.event.inputs.strategy == 'rolling-update' }}
-        run: |
-          kubectl apply -f EA2/ACT2.1/ROLLING-UPDATE/rolling-update.yaml
-          kubectl rollout status deployment/duoc-app-rolling --timeout=300s
+        run: kubectl apply -f EA2/ACT2.1/ROLLING-UPDATE/rolling-update.yaml && kubectl rollout status deployment/duoc-app-rolling --timeout=300s
 
-      - name: ❌ Ejecutar Recreate (All-in-once)
+      - name: ❌ Recreate
         if: ${{ github.event.inputs.strategy == 'recreate' }}
-        run: |
-          kubectl apply -f EA2/ACT2.1/ALL-IN-ONCE/all-in-once.yaml
-          kubectl rollout status deployment/duoc-app-recreate --timeout=300s
+        run: kubectl apply -f EA2/ACT2.1/ALL-IN-ONCE/all-in-once.yaml && kubectl rollout status deployment/duoc-app-recreate --timeout=300s
           
-      - name: 🟦 Ejecutar Blue/Green
+      - name: 🟦 Blue/Green
         if: ${{ github.event.inputs.strategy == 'blue-green' }}
         run: |
-          YAML_FILE_GREEN="EA2/ACT2.1/BLUE-GREEN/blue-green.yaml"
-          kubectl apply -f $YAML_FILE_GREEN
+          kubectl apply -f EA2/ACT2.1/BLUE-GREEN/blue-green.yaml
           kubectl rollout status deployment/duoc-app-green --timeout=300s
           sleep 60
           kubectl patch service duoc-app-bg-service -p '{"spec": {"selector": {"version": "green"}}}'
           
-      - name: 🐥 Ejecutar Canary
+      - name: 🐥 Canary
         if: ${{ github.event.inputs.strategy == 'canary' }}
         run: |
-          YAML_FILE_CANARY="EA2/ACT2.1/CANARY/canary.yaml"
-          kubectl apply -f $YAML_FILE_CANARY
+          kubectl apply -f EA2/ACT2.1/CANARY/canary.yaml
           kubectl rollout status deployment/duoc-app-canary-v2 --timeout=300s
           sleep 60
           kubectl scale deployment/duoc-app-canary-v2 --replicas=3
           kubectl scale deployment/duoc-app-stable-v1 --replicas=0
-          #prueba
