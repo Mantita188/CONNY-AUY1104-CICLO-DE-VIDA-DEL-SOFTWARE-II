@@ -1,7 +1,7 @@
 name: ECR Build & Push
 
 # 💡 Activador: El flujo se ejecutará cuando haya un PUSH (incluyendo MERGE)
-# a master, O cuando se PUBLIQUE un nuevo Release.
+# a master, O cuando se PUBLIQUE un nuevo Release. lol
 on:
   push:
     branches:
