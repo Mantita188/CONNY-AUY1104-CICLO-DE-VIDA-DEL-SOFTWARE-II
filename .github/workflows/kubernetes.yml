@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+  # Esto permite que el pipeline corra manualmente desde la pestaña Actions
   workflow_dispatch:
     inputs:
       strategy:
