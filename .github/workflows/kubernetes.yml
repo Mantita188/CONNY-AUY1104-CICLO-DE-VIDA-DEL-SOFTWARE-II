@@ -37,7 +37,15 @@ jobs:
 
       - name: Conectar a EKS
         run: |
-          aws eks update-kubeconfig --name ${{ github.event.inputs.eks_cluster_name }} --region ${{ github.event.inputs.aws_region }}
+          CLUSTER_NAME="${{ github.event.inputs.eks_cluster_name }}"
+          REGION="${{ github.event.inputs.aws_region }}"
+          
+          # Si los inputs están vacíos, usamos valores por defecto
+          if [ -z "$CLUSTER_NAME" ]; then CLUSTER_NAME="duoc-eks-cluster-cli"; fi
+          if [ -z "$REGION" ]; then REGION="us-east-1"; fi
+          
+          echo "Conectando al clúster: $CLUSTER_NAME en la región: $REGION"
+          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$REGION"
       
       - name: 🔄 Rolling Update
         if: ${{ github.event.inputs.strategy == 'rolling-update' }}
